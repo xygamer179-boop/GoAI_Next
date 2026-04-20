@@ -54,4 +54,3 @@ textarea,input{transition:all .2s}
 textarea:focus,input:focus{box-shadow:0 0 0 3px rgba(var(--primary-rgb),.2);border-color:var(--primary)!important;outline:none}
 button:active:not(:disabled){transform:scale(.95)}
 body { margin: 0; }
-
