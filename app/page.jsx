@@ -11,62 +11,6 @@ const DEFAULT_PREF = 'or_minimax';
 const MGR_ID = 'groq_llama33_70b_b';
 const DC_MGR_FALLBACK = 'gh_gpt41';
 
-/* ─── MODEL REGISTRY ─────────────────────────────────────────────────────── */
-const RULES = {
-  /* OpenRouter */
-  'or_minimax':    { role:'MiniMax',      modelName:'MiniMax M1',          prov:'OpenRouter',   s:'long context · recommended', tok:4096, c:'#6366f1', e:'🧩', group:'OpenRouter', isDCWorker:true,  isDefault:true },
-  'or_llama33':    { role:'Llama Free',   modelName:'Llama 3.3 70B',       prov:'OpenRouter',   s:'free 70B powerhouse',        tok:4096, c:'#22c55e', e:'🆓', group:'OpenRouter' },
-  'or_qwen3':      { role:'Qwen3',        modelName:'Qwen3 8B',            prov:'OpenRouter',   s:'compact reasoning',          tok:4096, c:'#f59e0b', e:'🐉', group:'OpenRouter' },
-  'or_gemma3':     { role:'Gemma 3',      modelName:'Gemma 3 27B',         prov:'OpenRouter',   s:'Google open model',          tok:4096, c:'#84cc16', e:'💚', group:'OpenRouter' },
-  'or_mistral':    { role:'Mistral',      modelName:'Mistral 7B',          prov:'OpenRouter',   s:'efficient & fast',           tok:2000, c:'#f97316', e:'🌊', group:'OpenRouter' },
-  'or_phi4':       { role:'Phi-4',        modelName:'Phi-4 Reasoning',     prov:'OpenRouter',   s:'Microsoft reasoning',        tok:4096, c:'#0ea5e9', e:'🔬', group:'OpenRouter' },
-  /* Groq */
-  'groq_llama33_70b':     { role:'Assistant',  modelName:'Llama 3.3 70B',        prov:'Groq', s:'fast chat',               tok:2000, c:'#06b6d4', e:'⚡', group:'Groq' },
-  'groq_llama33_70b_b':   { role:'Manager',    modelName:'Llama 3.3 70B',        prov:'Groq', s:'orchestration manager',   tok:6000, c:'#10b981', e:'🎯', group:'Groq', isManager:true },
-  'groq_llama4_scout':    { role:'Scout',      modelName:'Llama 4 Scout 17B',    prov:'Groq', s:'fast reasoning',          tok:4096, c:'#22c55e', e:'🔭', group:'Groq' },
-  'groq_llama4_maverick': { role:'Maverick',   modelName:'Llama 4 Maverick',     prov:'Groq', s:'creative · DC worker',    tok:4096, c:'#a3e635', e:'🦅', group:'Groq', isDCWorker:true },
-  'groq_llama31_8b':      { role:'Quick',      modelName:'Llama 3.1 8B',         prov:'Groq', s:'instant responses',       tok:2000, c:'#67e8f9', e:'💨', group:'Groq' },
-  'groq_deepseek_r1':     { role:'DeepSeek R1',modelName:'DeepSeek R1 Qwen-32B', prov:'Groq', s:'reasoning · qwen-32b',    tok:6000, c:'#60a5fa', e:'🧮', group:'Groq' },
-  'groq_gemma2_9b':       { role:'Compact',    modelName:'Gemma 2 9B',           prov:'Groq', s:'efficient & concise',     tok:2000, c:'#fb923c', e:'💎', group:'Groq' },
-  'groq_mixtral':         { role:'Mixture',    modelName:'Mixtral 8x7B',         prov:'Groq', s:'diverse expertise',       tok:4096, c:'#e879f9', e:'🌀', group:'Groq' },
-  /* Gemini */
-  'gem_31_flash_lite_k1': { role:'Flash Lite',   modelName:'Gemini 2.5 Flash Lite', prov:'Google', s:'fastest · 1M ctx', tok:8192, c:'#a78bfa', e:'⚡', group:'Gemini', isDCWorker:true },
-  'gem_31_flash_lite_k2': { role:'Flash Lite K2', modelName:'Gemini 2.5 Flash Lite', prov:'Google', s:'fastest · 1M ctx', tok:8192, c:'#c4b5fd', e:'⚡', group:'Gemini' },
-  'gem_31_flash_lite_k3': { role:'Flash Lite K3', modelName:'Gemini 2.5 Flash Lite', prov:'Google', s:'fastest · 1M ctx', tok:8192, c:'#ddd6fe', e:'⚡', group:'Gemini' },
-  'gem_25_flash_k1':  { role:'Flash',    modelName:'Gemini 2.5 Flash',    prov:'Google', s:'multimodal · fast', tok:8192, c:'#8b5cf6', e:'✨', group:'Gemini' },
-  'gem_25_flash_k2':  { role:'Flash K2', modelName:'Gemini 2.5 Flash',    prov:'Google', s:'multimodal · fast', tok:8192, c:'#a78bfa', e:'✨', group:'Gemini' },
-  'gem_25_flash_k3':  { role:'Flash K3', modelName:'Gemini 2.5 Flash',    prov:'Google', s:'multimodal · fast', tok:8192, c:'#c4b5fd', e:'✨', group:'Gemini' },
-  'gem_20_flash':     { role:'Flash 2.0',modelName:'Gemini 2.0 Flash',    prov:'Google', s:'fast & capable',   tok:8192, c:'#7c3aed', e:'🔥', group:'Gemini' },
-  'gem_20_flash_lite':{ role:'Lite',     modelName:'Gemini 2.0 Flash Lite',prov:'Google', s:'lightest & cheapest',tok:8192,c:'#6d28d9', e:'🪶', group:'Gemini' },
-  /* GitHub */
-  'gh_gpt41_mini':    { role:'GPT-4.1 Mini', modelName:'GPT-4.1 Mini',         prov:'GitHub', s:'fast OpenAI model',     tok:3000, c:'#14b8a6', e:'🌐', group:'GitHub' },
-  'gh_gpt4o':         { role:'GPT-4o',       modelName:'GPT-4o',               prov:'GitHub', s:'multimodal flagship',   tok:4000, c:'#0d9488', e:'🔮', group:'GitHub', isDCWorker:true },
-  'gh_gpt41':         { role:'DC Manager',   modelName:'GPT-4.1',              prov:'GitHub', s:'code architect · DC mgr',tok:6000, c:'#0f766e', e:'🤖', group:'GitHub', isDCManager:true },
-  'gh_o4_mini':       { role:'o4-mini',      modelName:'o4-mini',              prov:'GitHub', s:'compact reasoning',     tok:4000, c:'#115e59', e:'🧩', group:'GitHub' },
-  'gh_deepseek_r1':   { role:'DeepSeek R1',  modelName:'DeepSeek R1 (GH)',     prov:'GitHub', s:'full R1 · may rate-limit',tok:8192,c:'#60a5fa', e:'🧠', group:'GitHub' },
-  'gh_deepseek_v3':   { role:'DeepSeek V3',  modelName:'DeepSeek V3 (GH)',     prov:'GitHub', s:'strong coder',          tok:4096, c:'#3b82f6', e:'🔷', group:'GitHub', isDCWorker:true },
-  'gh_llama33':       { role:'Llama GH',     modelName:'Llama 3.3 70B (GH)',   prov:'GitHub', s:'Meta via GitHub',       tok:4096, c:'#22c55e', e:'🦙', group:'GitHub' },
-  'gh_phi4':          { role:'Phi-4 GH',     modelName:'Phi-4 (GH)',           prov:'GitHub', s:'Microsoft small model', tok:4096, c:'#0ea5e9', e:'φ',  group:'GitHub' },
-  'gh_mistral_large': { role:'Mistral L',    modelName:'Mistral Large (GH)',   prov:'GitHub', s:'Mistral flagship',      tok:4096, c:'#f97316', e:'🌊', group:'GitHub' },
-  'gh_cohere':        { role:'Cohere',       modelName:'Cohere R+ (GH)',       prov:'GitHub', s:'retrieval & RAG',       tok:4096, c:'#ec4899', e:'📡', group:'GitHub' },
-  /* SambaNova */
-  'samba_llama33': { role:'Llama SN',  modelName:'Llama 3.3 70B',    prov:'SambaNova', s:'high-throughput',         tok:4096, c:'#f97316', e:'⚙️', group:'SambaNova' },
-  'samba_llama32': { role:'Llama 90B', modelName:'Llama 3.2 90B',    prov:'SambaNova', s:'vision + language',       tok:4096, c:'#fb923c', e:'👁️', group:'SambaNova' },
-  'samba_qwen25':  { role:'Qwen SN',   modelName:'Qwen 2.5 72B',     prov:'SambaNova', s:'open-source powerhouse',  tok:4096, c:'#fbbf24', e:'🔶', group:'SambaNova' },
-  /* Bytez */
-  'bytez_qwen25':  { role:'Qwen',       modelName:'Qwen 2.5 72B',   prov:'Bytez', s:'open-source specialist',    tok:4096, c:'#84cc16', e:'🔬', group:'Bytez' },
-  'bytez_llama31': { role:'Llama Bytez',modelName:'Llama 3.1 70B',  prov:'Bytez', s:'reliable baseline',         tok:4096, c:'#4ade80', e:'🦙', group:'Bytez' },
-  'bytez_mistral': { role:'Mistral B',  modelName:'Mistral 7B',     prov:'Bytez', s:'fast & lightweight',        tok:4096, c:'#86efac', e:'💫', group:'Bytez' },
-  /* DuckDuckGo */
-  'duckduckgo': { role:'Haiku Free', modelName:'Claude Haiku', prov:'DuckDuckGo', s:'free Claude — no key needed', tok:2000, c:'#ef4444', e:'🦆', group:'DuckDuckGo', isDCWorker:true },
-  /* HuggingFace */
-  'hf_mistral':  { role:'Mistral HF',  modelName:'Mistral 7B Instruct', prov:'HuggingFace', s:'serverless · your HF key', tok:2048, c:'#ff9500', e:'🤗', group:'HuggingFace', hfModel:'mistralai/Mistral-7B-Instruct-v0.3' },
-  'hf_zephyr':   { role:'Zephyr',      modelName:'Zephyr 7B Beta',      prov:'HuggingFace', s:'aligned chatbot',          tok:2048, c:'#ff6b35', e:'💨', group:'HuggingFace', hfModel:'HuggingFaceH4/zephyr-7b-beta' },
-  'hf_phi3':     { role:'Phi-3 Mini',  modelName:'Phi-3.5 Mini',        prov:'HuggingFace', s:'Microsoft compact model',  tok:2048, c:'#ff8c00', e:'φ',  group:'HuggingFace', hfModel:'microsoft/Phi-3.5-mini-instruct' },
-  'hf_gemma2':   { role:'Gemma 2 HF',  modelName:'Gemma 2 9B IT',       prov:'HuggingFace', s:'Google open · instruct',   tok:2048, c:'#ffa500', e:'🌿', group:'HuggingFace', hfModel:'google/gemma-2-9b-it' },
-  'hf_qwen25':   { role:'Qwen HF',     modelName:'Qwen2.5 7B Instruct', prov:'HuggingFace', s:'Alibaba open model',       tok:2048, c:'#ffb347', e:'🐉', group:'HuggingFace', hfModel:'Qwen/Qwen2.5-7B-Instruct' },
-};
-
 const GROUP_COLORS = {
   OpenRouter:'#6366f1', Groq:'#06b6d4', Gemini:'#8b5cf6',
   GitHub:'#14b8a6', SambaNova:'#f97316', Bytez:'#84cc16',
@@ -79,15 +23,13 @@ const getMemCtx = m => m.length
   ? '\n\n[Recent context]\n' + m.slice(-5).map((x,i) => `${i+1}. [${x.src}] ${x.q}`).join('\n')
   : '';
 
-const buildSys = (pid, sub, mem=[]) => {
-  const r = RULES[pid] || RULES[DEFAULT_PREF];
-  const base = `You are ${r.modelName}, a helpful AI assistant in GoAi. Be clear, honest, and thorough. Help with anything — coding, writing, research, math, creative work, advice, or conversation.${getMemCtx(mem)}`;
+const buildSys = (prov, sub, mem=[]) => {
+  const base = `You are ${prov.label}, a helpful AI assistant in GoAi. Be clear, honest, and thorough. Help with anything — coding, writing, research, math, creative work, advice, or conversation.${getMemCtx(mem)}`;
   return sub ? (base + '\n\nYour specific task:\n' + sub) : base;
 };
 
-const buildDCSys = (pid, mem=[]) => {
-  const r = RULES[pid] || RULES[DEFAULT_PREF];
-  return `You are ${r.modelName} in GoAi DeepCoder Mode — an expert software engineer.
+const buildDCSys = (prov, mem=[]) => {
+  return `You are ${prov.label} in GoAi DeepCoder Mode — an expert software engineer.
 RULES: Write COMPLETE, RUNNABLE code. Zero placeholders or TODOs. All imports, error handling included. Clean code, comments only for complex logic. Close ALL \`\`\` blocks. End with [COMPLETE].${getMemCtx(mem)}`;
 };
 
@@ -105,39 +47,11 @@ const getHist = (msgs, n=3) =>
     .map(m => ({ role: m.role==='ai'?'assistant':'user', content: S(m.text).slice(0,600) }));
 
 /* ─── API LAYER ──────────────────────────────────────────────────────────── */
-async function callHFDirect(pid, sys, msgs, tok, hfKey) {
-  const r = RULES[pid];
-  if (!r?.hfModel) throw new Error('Not an HF model');
-  if (!hfKey) throw new Error('HuggingFace API key required — click ⚙️ to set');
-  const response = await fetch(
-    `https://api-inference.huggingface.co/models/${r.hfModel}/v1/chat/completions`,
-    {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${hfKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: r.hfModel,
-        messages: [{ role:'system', content: sys }, ...msgs],
-        max_tokens: tok || 2048,
-        temperature: 0.7,
-        stream: false
-      })
-    }
-  );
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error?.message || data.error || 'HF API error ' + response.status);
-  const text = data.choices?.[0]?.message?.content || '';
-  if (!text) throw new Error('Empty response from HuggingFace');
-  return text;
-}
-
-async function api(pid, sys, msgs, tok, hfKey) {
-  if (RULES[pid]?.group === 'HuggingFace') {
-    return callHFDirect(pid, sys, msgs, tok, hfKey);
-  }
+async function api(pid, sys, msgs, tok) {
   const r = await fetch('/api/chat', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ provider:pid, systemPrompt:S(sys).slice(0,12000), messages:(msgs||[]).map(m=>({role:m.role,content:S(m.content).slice(0,18000)})), maxTokens:tok||RULES[pid]?.tok||2000 })
+    body: JSON.stringify({ provider:pid, systemPrompt:S(sys).slice(0,12000), messages:(msgs||[]).map(m=>({role:m.role,content:S(m.content).slice(0,18000)})), maxTokens:tok||2000 })
   });
   const d = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status);
@@ -145,16 +59,11 @@ async function api(pid, sys, msgs, tok, hfKey) {
   return d.text;
 }
 
-async function streamApi(pid, sys, msgs, tok, onChunk, hfKey) {
-  if (RULES[pid]?.group === 'HuggingFace') {
-    const text = await callHFDirect(pid, sys, msgs, tok, hfKey);
-    onChunk(text);
-    return;
-  }
+async function streamApi(pid, sys, msgs, tok, onChunk) {
   const r = await fetch('/api/stream', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ provider:pid, systemPrompt:S(sys).slice(0,12000), messages:(msgs||[]).map(m=>({role:m.role,content:S(m.content).slice(0,18000)})), maxTokens:tok||RULES[pid]?.tok||2000 })
+    body: JSON.stringify({ provider:pid, systemPrompt:S(sys).slice(0,12000), messages:(msgs||[]).map(m=>({role:m.role,content:S(m.content).slice(0,18000)})), maxTokens:tok||2000 })
   });
   if (!r.ok) { let e='HTTP '+r.status; try{const d=await r.json();e=d.error||e;}catch{} throw new Error(e); }
   if (!r.body) throw new Error('No response body');
@@ -292,13 +201,13 @@ function CommLog({ comms }) {
         <span style={{fontSize:8,opacity:.34,marginLeft:'auto'}}>{open?'▲':'▼'}</span>
       </summary>
       <div style={{padding:'10px 13px',borderTop:'1px solid rgba(245,158,11,.08)',display:'flex',flexDirection:'column',gap:8}}>
-        {comms.map((c,i)=>{ const r=c?.pid?RULES[c.pid]:null; return (
+        {comms.map((c,i)=>{ return (
           <div key={i} style={{display:'flex',gap:9,alignItems:'flex-start'}}>
-            <span style={{fontSize:16,flexShrink:0,lineHeight:1.4}}>{r?.e||'·'}</span>
+            <span style={{fontSize:16,flexShrink:0,lineHeight:1.4}}>{c.emoji||'·'}</span>
             <div>
-              <span style={{fontSize:10,color:'#fbbf24',fontWeight:700}}>{r?.modelName||S(c?.pid)||'AI'} </span>
-              <span style={{fontSize:9,color:'var(--text-muted)'}}>({r?.role||'worker'})</span>
-              <div style={{fontSize:12.5,color:'var(--text-secondary)',lineHeight:1.6,marginTop:3,fontStyle:'italic'}}>"{S(c?.text)}"</div>
+              <span style={{fontSize:10,color:'#fbbf24',fontWeight:700}}>{c.label||S(c.pid)} </span>
+              <span style={{fontSize:9,color:'var(--text-muted)'}}>({c.role||'worker'})</span>
+              <div style={{fontSize:12.5,color:'var(--text-secondary)',lineHeight:1.6,marginTop:3,fontStyle:'italic'}}>"{S(c.text)}"</div>
             </div>
           </div>
         );})}
@@ -308,14 +217,13 @@ function CommLog({ comms }) {
 }
 
 /* ─── STREAM BUBBLE ──────────────────────────────────────────────────────── */
-function StreamBubble({ text, pid }) {
-  const r = RULES[pid] || RULES[DEFAULT_PREF];
+function StreamBubble({ text, prov }) {
   return (
     <div style={{maxWidth:'94%',alignSelf:'flex-start',animation:'msgIn .35s cubic-bezier(.34,1.56,.64,1)'}}>
       <div style={{padding:'13px 16px',borderRadius:'6px 22px 22px 22px',background:'rgba(var(--primary-rgb),.07)',border:'1.2px solid rgba(var(--primary-rgb),.2)',lineHeight:1.85,boxShadow:'0 4px 20px rgba(var(--primary-rgb),.1)'}}>
         <div style={{fontSize:9.5,marginBottom:8,display:'flex',alignItems:'center',gap:6,fontWeight:600}}>
-          <span style={{fontSize:15}}>{r.e}</span>
-          <span style={{color:r.c||'var(--text-muted)',fontWeight:700}}>{r.modelName||pid}</span>
+          <span style={{fontSize:15}}>{prov?.emoji||'·'}</span>
+          <span style={{color:prov?.color||'var(--text-muted)',fontWeight:700}}>{prov?.label||prov?.id}</span>
           <span style={{color:'var(--text-muted)',fontSize:8.5,animation:'pulse 1.5s ease infinite'}}>● streaming</span>
         </div>
         <MsgContent text={text}/>
@@ -326,17 +234,17 @@ function StreamBubble({ text, pid }) {
 }
 
 /* ─── MODEL PICKER BUTTON ────────────────────────────────────────────────── */
-function ModelPickerBtn({ pref, provs, onClick }) {
-  const cur = RULES[pref] || {};
-  const av = provs[pref]?.available;
+function ModelPickerBtn({ provs, pref, onClick }) {
+  const cur = provs[pref] || {};
+  const av = cur.available;
   const isDefault = pref===DEFAULT_PREF;
   return (
     <button onClick={onClick} style={{display:'flex',alignItems:'center',gap:7,background:isDefault?'linear-gradient(135deg,rgba(var(--primary-rgb),.14),rgba(139,92,246,.1))':'rgba(var(--primary-rgb),.07)',border:'1.2px solid '+(isDefault?'rgba(var(--primary-rgb),.3)':'rgba(var(--primary-rgb),.18)'),borderRadius:20,padding:'6px 12px 6px 9px',cursor:'pointer',color:'var(--primary-light)',fontFamily:'inherit',flexShrink:0,maxWidth:200,transition:'all .2s',fontWeight:isDefault?600:500}}>
       <span style={{width:7,height:7,borderRadius:'50%',background:av?'#10b981':'var(--text-muted)',flexShrink:0,transition:'all .3s',boxShadow:av?'0 0 8px rgba(16,185,129,.5)':'none'}}/>
-      <span style={{fontSize:16,lineHeight:1,flexShrink:0}}>{cur.e||'·'}</span>
+      <span style={{fontSize:16,lineHeight:1,flexShrink:0}}>{cur.emoji||'·'}</span>
       <div style={{minWidth:0,textAlign:'left'}}>
         <div style={{fontSize:11.5,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{cur.role||pref}</div>
-        <div style={{fontSize:8,opacity:.45,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{cur.modelName||''}</div>
+        <div style={{fontSize:8,opacity:.45,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{cur.label||''}</div>
       </div>
       <span style={{fontSize:9,opacity:.3,flexShrink:0}}>▾</span>
     </button>
@@ -344,20 +252,19 @@ function ModelPickerBtn({ pref, provs, onClick }) {
 }
 
 /* ─── MODEL SHEET ────────────────────────────────────────────────────────── */
-function ModelSheet({ open, onClose, provs, pref, setPref, hfKey, onSetHFKey }) {
+function ModelSheet({ open, onClose, provs, pref, setPref }) {
   const [q, setQ] = useState('');
   const [activeGroup, setActiveGroup] = useState('all');
   if (!open) return null;
   const avCount = Object.values(provs).filter(v=>v.available).length;
   const groups = {};
   for (const [pid, info] of Object.entries(provs)) {
-    const r = RULES[pid]; if (!r) continue;
-    const g = r.group||'Other';
+    const g = info.group||'Other';
     const ql = q.toLowerCase();
-    if (ql && !r.modelName?.toLowerCase().includes(ql) && !r.role?.toLowerCase().includes(ql) && !g.toLowerCase().includes(ql) && !r.s?.toLowerCase().includes(ql)) continue;
+    if (ql && !info.label?.toLowerCase().includes(ql) && !info.role?.toLowerCase().includes(ql) && !g.toLowerCase().includes(ql) && !info.description?.toLowerCase().includes(ql)) continue;
     if (activeGroup !== 'all' && g !== activeGroup) continue;
     if (!groups[g]) groups[g] = [];
-    groups[g].push({ pid, info, r });
+    groups[g].push({ pid, info });
   }
   return (
     <div style={{position:'fixed',inset:0,zIndex:9990,display:'flex',flexDirection:'column',justifyContent:'flex-end'}}>
@@ -368,12 +275,9 @@ function ModelSheet({ open, onClose, provs, pref, setPref, hfKey, onSetHFKey }) 
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
             <div>
               <div style={{fontWeight:900,color:'var(--primary-light)',fontSize:15,fontFamily:"'Orbitron',monospace"}}>Select Model</div>
-              <div style={{fontSize:9,color:'var(--text-muted)',marginTop:2}}>{avCount}/{Object.keys(provs).length} available · {hfKey ? '🤗 HF connected' : 'Set HF key for more models'}</div>
+              <div style={{fontSize:9,color:'var(--text-muted)',marginTop:2}}>{avCount}/{Object.keys(provs).length} available</div>
             </div>
-            <div style={{display:'flex',gap:6}}>
-              <button onClick={onSetHFKey} title="HuggingFace Settings" style={{background:'rgba(255,149,0,.1)',border:'1px solid rgba(255,149,0,.3)',borderRadius:12,padding:'5px 10px',cursor:'pointer',color:'#ffb347',fontSize:11,fontFamily:'inherit',transition:'all .2s'}}>🤗 HF Key</button>
-              <button onClick={onClose} style={{background:'rgba(var(--primary-rgb),.09)',border:'1px solid rgba(var(--primary-rgb),.22)',borderRadius:12,padding:'5px 12px',cursor:'pointer',color:'var(--primary-light)',fontSize:12,fontFamily:'inherit',fontWeight:600}}>✕</button>
-            </div>
+            <button onClick={onClose} style={{background:'rgba(var(--primary-rgb),.09)',border:'1px solid rgba(var(--primary-rgb),.22)',borderRadius:12,padding:'5px 12px',cursor:'pointer',color:'var(--primary-light)',fontSize:12,fontFamily:'inherit',fontWeight:600}}>✕</button>
           </div>
           <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search models…" style={{width:'100%',background:'var(--card-bg)',border:'1.2px solid var(--glass-border)',borderRadius:13,padding:'8px 12px',color:'var(--text-primary)',fontSize:12.5,fontFamily:'inherit',outline:'none',fontWeight:500}}/>
           <div style={{display:'flex',gap:5,marginTop:8,overflowX:'auto',paddingBottom:2}}>
@@ -389,24 +293,23 @@ function ModelSheet({ open, onClose, provs, pref, setPref, hfKey, onSetHFKey }) 
               <div key={g}>
                 <div className="grp-lbl" style={{color:GROUP_COLORS[g]||'var(--text-muted)'}}>{g} <span style={{opacity:.5,fontSize:'8px'}}>({items.length})</span></div>
                 <div style={{padding:'0 10px',display:'flex',flexDirection:'column',gap:3}}>
-                  {items.map(({pid,info,r})=>{
+                  {items.map(({pid,info})=>{
                     const sel=pref===pid, isDef=pid===DEFAULT_PREF;
                     return (
                       <button key={pid} onClick={()=>{setPref(pid);onClose();setQ('');}}
                         style={{display:'flex',alignItems:'center',gap:10,background:sel?'rgba(var(--primary-rgb),.18)':isDef?'rgba(var(--primary-rgb),.07)':'rgba(var(--primary-rgb),.02)',border:'1.2px solid '+(sel?'rgba(var(--primary-rgb),.45)':isDef?'rgba(var(--primary-rgb),.22)':'var(--border)'),borderRadius:14,padding:'10px 12px',cursor:'pointer',textAlign:'left',fontFamily:'inherit',width:'100%',transition:'all .22s',boxShadow:sel?'0 4px 14px rgba(var(--primary-rgb),.14)':'none'}}>
                         <span style={{width:7,height:7,borderRadius:'50%',background:info.available?'#10b981':'var(--text-muted)',boxShadow:info.available?'0 0 10px rgba(16,185,129,.4)':'none',flexShrink:0}}/>
-                        <span style={{fontSize:20,lineHeight:1,flexShrink:0,width:26,textAlign:'center'}}>{r.e||'·'}</span>
+                        <span style={{fontSize:20,lineHeight:1,flexShrink:0,width:26,textAlign:'center'}}>{info.emoji||'·'}</span>
                         <div style={{flex:1,minWidth:0}}>
                           <div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
-                            <span style={{fontSize:12,fontWeight:sel?700:600,color:sel?'var(--primary-light)':'var(--text-primary)'}}>{r.role||pid}</span>
+                            <span style={{fontSize:12,fontWeight:sel?700:600,color:sel?'var(--primary-light)':'var(--text-primary)'}}>{info.role||pid}</span>
                             {isDef&&<span style={{fontSize:7,background:'rgba(var(--primary-rgb),.2)',borderRadius:5,padding:'1px 5px',color:'var(--primary-light)',fontWeight:700}}>DEFAULT</span>}
                             {info.isManager&&<span style={{fontSize:7,background:'rgba(16,185,129,.12)',borderRadius:5,padding:'1px 5px',color:'#6ee7b7',fontWeight:700}}>MGR</span>}
                             {info.isDCManager&&<span style={{fontSize:7,background:'rgba(96,165,250,.14)',borderRadius:5,padding:'1px 5px',color:'#93c5fd',fontWeight:700}}>DC-MGR</span>}
                             {info.isDCWorker&&<span style={{fontSize:7,background:'rgba(249,115,22,.14)',borderRadius:5,padding:'1px 5px',color:'#fdba74',fontWeight:700}}>DC-WRK</span>}
-                            {r.group==='HuggingFace'&&<span style={{fontSize:7,background:'rgba(255,149,0,.15)',borderRadius:5,padding:'1px 5px',color:'#ffb347',fontWeight:700}}>HF</span>}
                           </div>
-                          <div style={{fontSize:9.5,marginTop:2}}><span style={{color:r.c||'var(--text-muted)',fontWeight:600}}>{r.modelName||pid}</span><span style={{color:'var(--text-muted)',fontSize:8.5}}> · {r.prov||''}</span></div>
-                          <div style={{fontSize:8.5,color:'var(--text-muted)',marginTop:1.5}}>{r.s||''}</div>
+                          <div style={{fontSize:9.5,marginTop:2}}><span style={{color:info.color||'var(--text-muted)',fontWeight:600}}>{info.label||pid}</span><span style={{color:'var(--text-muted)',fontSize:8.5}}> · {info.group||''}</span></div>
+                          <div style={{fontSize:8.5,color:'var(--text-muted)',marginTop:1.5}}>{info.description||''}</div>
                         </div>
                         {sel&&<span style={{color:'var(--primary-light)',fontSize:14,flexShrink:0,fontWeight:700}}>✓</span>}
                         {!info.available&&<span style={{fontSize:8,color:'var(--text-muted)',flexShrink:0,background:'rgba(var(--primary-rgb),.05)',borderRadius:6,padding:'2px 6px',fontWeight:500}}>no key</span>}
@@ -417,39 +320,6 @@ function ModelSheet({ open, onClose, provs, pref, setPref, hfKey, onSetHFKey }) 
               </div>
             );
           })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── HF SETTINGS MODAL ──────────────────────────────────────────────────── */
-function HFSettingsModal({ open, onClose, hfKey, onSave }) {
-  const [val, setVal] = useState(hfKey||'');
-  useEffect(()=>{ if(open) setVal(hfKey||''); },[open,hfKey]);
-  if (!open) return null;
-  return (
-    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.88)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:9997,padding:20,animation:'fadeIn .2s ease'}}>
-      <div style={{background:'var(--bg-secondary)',border:'1px solid rgba(255,149,0,.3)',borderRadius:24,width:'100%',maxWidth:400,overflow:'hidden',boxShadow:'0 0 60px rgba(255,149,0,.15)'}}>
-        <div style={{background:'linear-gradient(135deg,rgba(255,149,0,.12),rgba(255,107,53,.08))',padding:'22px 24px',borderBottom:'1px solid rgba(255,149,0,.15)'}}>
-          <div style={{fontFamily:"'Orbitron',monospace",fontSize:'1.1rem',fontWeight:900,color:'#ffb347',marginBottom:4}}>🤗 HuggingFace API Key</div>
-          <div style={{fontSize:11,color:'var(--text-muted)'}}>Enables {Object.values(RULES).filter(r=>r.group==='HuggingFace').length} HF models · Stored locally · Never sent to server</div>
-        </div>
-        <div style={{padding:'20px 24px'}}>
-          <div style={{fontSize:10.5,color:'var(--text-secondary)',marginBottom:8}}>Get your key at <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noreferrer" style={{color:'#ffb347'}}>huggingface.co/settings/tokens</a></div>
-          <input
-            type="password"
-            value={val}
-            onChange={e=>setVal(e.target.value)}
-            placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxx"
-            style={{width:'100%',background:'var(--card-bg)',border:'1.5px solid rgba(255,149,0,.25)',borderRadius:12,padding:'10px 14px',color:'var(--text-primary)',fontSize:13,fontFamily:"'JetBrains Mono',monospace",outline:'none'}}
-          />
-          <div style={{fontSize:9.5,color:'var(--text-muted)',marginTop:7}}>Models: Mistral 7B, Zephyr 7B, Phi-3.5 Mini, Gemma 2 9B, Qwen2.5 7B</div>
-          <div style={{display:'flex',gap:9,marginTop:16}}>
-            <button onClick={()=>{onSave(val.trim());onClose();}} style={{flex:1,background:'linear-gradient(135deg,rgba(255,149,0,.2),rgba(255,107,53,.15))',border:'1px solid rgba(255,149,0,.35)',borderRadius:14,padding:'11px',cursor:'pointer',color:'#ffb347',fontSize:12,fontFamily:'inherit',fontWeight:700,transition:'all .2s'}}>Save Key</button>
-            {hfKey&&<button onClick={()=>{onSave('');onClose();}} style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.25)',borderRadius:14,padding:'11px 18px',cursor:'pointer',color:'#fca5a5',fontSize:11,fontFamily:'inherit',transition:'all .2s'}}>Clear</button>}
-            <button onClick={onClose} style={{background:'rgba(var(--primary-rgb),.06)',border:'1px solid var(--glass-border)',borderRadius:14,padding:'11px 18px',cursor:'pointer',color:'var(--text-secondary)',fontSize:11,fontFamily:'inherit',transition:'all .2s'}}>Cancel</button>
-          </div>
         </div>
       </div>
     </div>
@@ -550,7 +420,7 @@ function SearchDrawer({ open, onClose, msgs, onJump }) {
 }
 
 /* ─── ABOUT MODAL ────────────────────────────────────────────────────────── */
-function AboutModal({ open, onClose }) {
+function AboutModal({ open, onClose, provCount }) {
   if (!open) return null;
   const modes = [
     ['🧩','Default','MiniMax M1 — powerful, fast, free via OpenRouter'],
@@ -568,7 +438,7 @@ function AboutModal({ open, onClose }) {
           <div style={{textAlign:'center',marginBottom:22}}>
             <div style={{fontFamily:"'Orbitron',monospace",fontSize:'2.4rem',fontWeight:900,background:'linear-gradient(135deg,#06b6d4,#8b5cf6,#10b981)',WebkitBackgroundClip:'text',backgroundClip:'text',color:'transparent',letterSpacing:'-1px',marginBottom:4}}>⚡ GoAi</div>
             <div style={{fontSize:9.5,color:'var(--text-muted)',letterSpacing:'.18em',textTransform:'uppercase'}}>Multi-AI Collaboration System</div>
-            <div style={{fontSize:11,color:'var(--text-secondary)',marginTop:4}}>v6.4 · {Object.keys(RULES).length} Models · Streaming · MongoDB · HuggingFace</div>
+            <div style={{fontSize:11,color:'var(--text-secondary)',marginTop:4}}>v7 · {provCount} Models · Streaming · MongoDB</div>
           </div>
           <div style={{background:'linear-gradient(135deg,rgba(var(--primary-rgb),.09),rgba(139,92,246,.06))',border:'1px solid rgba(var(--primary-rgb),.2)',borderRadius:18,padding:'16px 20px',marginBottom:18,textAlign:'center'}}>
             <div style={{fontSize:9.5,color:'var(--text-muted)',marginBottom:5,letterSpacing:'.12em',textTransform:'uppercase'}}>Created by</div>
@@ -659,7 +529,7 @@ function Sidebar({ chats, activeId, onNew, onSelect, onDelete, onRename, onAbout
           <button onClick={onAbout} style={{background:'var(--glass)',border:'1px solid var(--glass-border)',borderRadius:12,padding:'8px 12px',cursor:'pointer',color:'var(--text-secondary)',fontFamily:'inherit',fontSize:11,textAlign:'left',display:'flex',alignItems:'center',gap:9,transition:'all .2s',fontWeight:500}}>
             <span>ℹ️</span> About GoAi
           </button>
-          <div style={{fontSize:8.5,color:'var(--text-muted)',textAlign:'center',fontWeight:500}}>Made by Arush · v6.4</div>
+          <div style={{fontSize:8.5,color:'var(--text-muted)',textAlign:'center',fontWeight:500}}>Made by Arush · v7</div>
         </div>
       </div>
     </div>
@@ -738,17 +608,15 @@ export default function App() {
   const [mem, setMem] = useState([]);
   const [memOpen, setMemOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [hfModalOpen, setHfModalOpen] = useState(false);
   const [pv, setPv] = useState(null);
   const [busy, setBusy] = useState(false);
   const [typing, setTyping] = useState('');
   const [streamBuf, setStreamBuf] = useState('');
-  const [streamPid, setStreamPid] = useState('');
+  const [streamProv, setStreamProv] = useState(null);
   const [stat, setStat] = useState({ t:'Connecting…', c:'' });
   const [provs, setProvs] = useState({});
   const [inp, setInp] = useState('');
   const [theme, setTheme] = useState(() => { try{return localStorage.getItem('goai_theme')||'dark';}catch{return 'dark';} });
-  const [hfKey, setHfKey] = useState(() => { try{return localStorage.getItem('goai_hfkey')||'';}catch{return '';} });
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQ] = useState('');
   const chatRef = useRef(null);
@@ -763,39 +631,19 @@ export default function App() {
     try { localStorage.setItem('goai_theme', theme); } catch {}
   }, [theme]);
 
-  /* ── Inject HF models into provs ── */
-  useEffect(() => {
-    if (hfKey) {
-      setProvs(prev => {
-        const updated = { ...prev };
-        for (const pid of Object.keys(RULES)) {
-          if (RULES[pid].group==='HuggingFace') updated[pid] = { available:true, label:RULES[pid].modelName, group:'HuggingFace', free:false };
-        }
-        return updated;
-      });
-    } else {
-      setProvs(prev => {
-        const updated = { ...prev };
-        for (const pid of Object.keys(RULES)) {
-          if (RULES[pid].group==='HuggingFace') delete updated[pid];
-        }
-        return updated;
-      });
-    }
-  }, [hfKey]);
-
   const avail = useMemo(() => Object.entries(provs).filter(([,v])=>v.available).map(([k])=>k), [provs]);
   const provAvail = useMemo(() => Object.values(provs).filter(v=>v.available).length, [provs]);
   const dcManagers = useMemo(() => Object.entries(provs).filter(([,v])=>v.available&&v.isDCManager).map(([k])=>k), [provs]);
   const dcWorkers = useMemo(() => Object.entries(provs).filter(([,v])=>v.available&&v.isDCWorker).map(([k])=>k), [provs]);
 
-  /* ── Init ── */
+  /* ── Fetch providers from server (single source of truth) ── */
   useEffect(() => {
     fetch('/api/providers').then(r=>r.json()).then(d => {
-      setProvs(prev => ({ ...d, ...Object.fromEntries(Object.entries(prev).filter(([k])=>RULES[k]?.group==='HuggingFace')) }));
+      setProvs(d);
       const cnt = Object.values(d).filter(v=>v.available).length;
       setStat({ t:`Ready · ${cnt} AIs`, c:'good' });
     }).catch(()=>setStat({t:'⚠️ Server offline',c:'bad'}));
+
     chatAPI.list().then(cs => {
       if (cs?.length) {
         setChats(cs); const last=cs[0]; setActiveId(last.id);
@@ -821,7 +669,6 @@ export default function App() {
 
   useEffect(() => { if(chatRef.current) chatRef.current.scrollTop=chatRef.current.scrollHeight; }, [activeMsgs,typing,streamBuf]);
 
-  /* ── Save ── */
   const scheduleSave = useCallback((id,title,mode,pref,msgs) => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
@@ -831,7 +678,6 @@ export default function App() {
     }, 800);
   }, []);
 
-  /* ── Create chat ── */
   const createChatFn = useCallback(async () => {
     const id=uid(), mode='fast', pref=DEFAULT_PREF;
     await chatAPI.create(id,'New Chat',mode,pref).catch(console.error);
@@ -875,8 +721,8 @@ export default function App() {
   const setPref = useCallback(p => {
     setActivePref(p);
     if (activeId) { setChats(prev=>prev.map(c=>c.id===activeId?{...c,pref:p}:c)); chatAPI.save(activeId,chats.find(c=>c.id===activeId)?.title||'New Chat',activeMode,p,activeMsgs.filter(x=>!x.isLog&&!x.isComm)).catch(console.error); }
-    toast(`Model: ${RULES[p]?.modelName||p}`, 'info');
-  }, [activeId, activeMode, activeMsgs, chats, toast]);
+    toast(`Model: ${provs[p]?.label||p}`, 'info');
+  }, [activeId, activeMode, activeMsgs, chats, provs, toast]);
 
   const addMsg = useCallback((role,text,extra={}) => {
     const msg = { id:uid(), role, text:S(text), t:Date.now(), ...extra };
@@ -901,38 +747,32 @@ export default function App() {
     if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
   }, []);
 
-  const handleSaveHFKey = useCallback(key => {
-    setHfKey(key);
-    try { if(key) localStorage.setItem('goai_hfkey',key); else localStorage.removeItem('goai_hfkey'); } catch {}
-    toast(key ? '🤗 HuggingFace connected!' : 'HF key cleared', key?'success':'warn');
-  }, [toast]);
-
   /* ─── AI Orchestration ── */
   async function commsRound(task, workers) {
     const settled = await Promise.allSettled(workers.slice(0,6).map(async pid => {
-      const r = RULES[pid]||RULES[DEFAULT_PREF];
-      const text = await api(pid,`You are ${r.modelName}. In ONE sentence (max 20 words), state what YOU will specifically handle.`,[{role:'user',content:'Task: '+S(task).slice(0,240)}],90,hfKey);
-      return { pid, text: S(text).replace(/\n/g,' ').trim().slice(0,170) };
+      const prov = provs[pid];
+      const text = await api(pid,`You are ${prov.label}. In ONE sentence (max 20 words), state what YOU will specifically handle.`,[{role:'user',content:'Task: '+S(task).slice(0,240)}],90);
+      return { pid, text: S(text).replace(/\n/g,' ').trim().slice(0,170), emoji: prov.emoji, label: prov.label, role: prov.role };
     }));
     return settled.filter(r=>r.status==='fulfilled'&&r.value?.pid).map(r=>r.value);
   }
 
   async function mgrPlan(task, workers, proposals, mgrId) {
     const mgr = mgrId||MGR_ID;
-    const propText = proposals.length ? 'Proposals:\n'+proposals.map(p=>`${p.pid}(${RULES[p.pid]?.role||p.pid}): "${p.text}"`).join('\n') : 'Workers: '+workers.map(p=>`${p}(${RULES[p]?.role||p})`).join(', ');
+    const propText = proposals.length ? 'Proposals:\n'+proposals.map(p=>`${p.pid}(${p.role}): "${p.text}"`).join('\n') : 'Workers: '+workers.map(p=>`${p}(${provs[p]?.role})`).join(', ');
     const q = `Task: "${S(task).slice(0,280)}"\n\n${propText}\n\nOutput ONLY: {"plan":"strategy","assignments":[{"prov":"or_minimax","subtask":"..."},...]}`;
     try {
-      const raw = await api(mgr,'You are GoAi Manager. Output ONLY valid JSON.',[{role:'user',content:q}],2000,hfKey);
+      const raw = await api(mgr,'You are GoAi Manager. Output ONLY valid JSON.',[{role:'user',content:q}],2000);
       const m = (raw||'').match(/\{[\s\S]*?"assignments"[\s\S]*?\}/); if(!m) throw new Error();
       const p = JSON.parse(m[0]); if(!Array.isArray(p.assignments)) throw new Error(); return p;
-    } catch { return { plan:'Parallel fallback', assignments:workers.slice(0,6).map(w=>({prov:w,subtask:task+'\n\nYou are '+S(RULES[w]?.modelName||w)+'. Provide a COMPLETE helpful response.'})) }; }
+    } catch { return { plan:'Parallel fallback', assignments:workers.slice(0,6).map(w=>({prov:w,subtask:task+'\n\nYou are '+S(provs[w]?.label||w)+'. Provide a COMPLETE helpful response.'})) }; }
   }
 
   async function mgrReview(task, responses, mgrId) {
     const mgr = mgrId||MGR_ID;
     const listing = responses.map((r,i)=>`[${i}] ${r.label}: ${S(r.text).slice(0,200)}`).join('\n---\n');
     const q = `Task: "${S(task).slice(0,120)}"\nOutputs:\n${listing}\nJSON: {"reviews":[{"idx":0,"label":"...","complete":true,"score":8,"issue":""}],"missing":"gaps"}`;
-    try { const raw=await api(mgr,'You are GoAi Manager. Output ONLY valid JSON.',[{role:'user',content:q}],1400,hfKey); const m=(raw||'').match(/\{[\s\S]*?"reviews"[\s\S]*?\}/); if(!m) throw new Error(); return JSON.parse(m[0]); }
+    try { const raw=await api(mgr,'You are GoAi Manager. Output ONLY valid JSON.',[{role:'user',content:q}],1400); const m=(raw||'').match(/\{[\s\S]*?"reviews"[\s\S]*?\}/); if(!m) throw new Error(); return JSON.parse(m[0]); }
     catch { return null; }
   }
 
@@ -946,7 +786,7 @@ export default function App() {
       : `You are GoAi Manager. Produce ONE FINAL clear, complete, helpful answer.${getMemCtx(memSnap)}`;
     const q = `Task: "${S(task).slice(0,260)}"${rd?.missing?'\nMissing: '+rd.missing:''}\n\nWorkers:\n${parts}\n\nFinal answer:`;
     try {
-      const final = await api(mgr, sys, [...hist.slice(-2),{role:'user',content:q.slice(0,18000)}], RULES[mgr]?.tok||6000, hfKey);
+      const final = await api(mgr, sys, [...hist.slice(-2),{role:'user',content:q.slice(0,18000)}], provs[mgr]?.maxTok||6000);
       addMsg('mgr',(isCoding?'💻':'🎯')+' Manager Final Answer\n\n'+S(final));
       ss('✓ Done · '+responses.length+' workers','good');
       toast(`Done! ${responses.length} workers`, 'success');
@@ -963,29 +803,29 @@ export default function App() {
     const workers = dcWorkers.filter(x=>x!==dcMgr&&avail.includes(x));
     const useWorkers = workers.length ? workers : avail.filter(x=>x!==dcMgr).slice(0,5);
     if (!useWorkers.length) { addMsg('warn','No DeepCoder workers available.'); ss('No workers','bad'); return; }
-    addMsg('meta',`💻 DeepCoder · Manager: ${RULES[dcMgr]?.modelName||dcMgr} · ${useWorkers.length} specialists`);
+    addMsg('meta',`💻 DeepCoder · Manager: ${provs[dcMgr]?.label||dcMgr} · ${useWorkers.length} specialists`);
     setTyping('💻 Specialists proposing architecture…');
     let proposals=[];
     try {
       const settled = await Promise.allSettled(useWorkers.slice(0,5).map(async pid => {
-        const r=RULES[pid];
-        const text=await api(pid,`You are ${r.modelName}. In ONE sentence, state the specific module you will implement.`,[{role:'user',content:'Coding task: '+S(p).slice(0,220)}],90,hfKey);
-        return { pid, text:S(text).replace(/\n/g,' ').trim().slice(0,180) };
+        const prov=provs[pid];
+        const text=await api(pid,`You are ${prov.label}. In ONE sentence, state the specific module you will implement.`,[{role:'user',content:'Coding task: '+S(p).slice(0,220)}],90);
+        return { pid, text:S(text).replace(/\n/g,' ').trim().slice(0,180), emoji:prov.emoji, label:prov.label, role:prov.role };
       }));
       proposals = settled.filter(r=>r.status==='fulfilled'&&r.value?.pid).map(r=>r.value);
     } catch {}
     setTyping(''); if(proposals.length) addComm(proposals);
     setTyping('📋 Architecting modules…');
-    let assignments = useWorkers.slice(0,6).map(w=>({ prov:w, subtask:`Write COMPLETE code for: "${S(p).slice(0,150)}"\nYou are ${RULES[w]?.modelName||w}. ALL code runnable. End [COMPLETE].` }));
+    let assignments = useWorkers.slice(0,6).map(w=>({ prov:w, subtask:`Write COMPLETE code for: "${S(p).slice(0,150)}"\nYou are ${provs[w]?.label||w}. ALL code runnable. End [COMPLETE].` }));
     try {
-      const propText = proposals.length ? 'Proposals:\n'+proposals.map(x=>`${x.pid}(${RULES[x.pid]?.role}): "${x.text}"`).join('\n') : 'Workers: '+useWorkers.map(x=>`${x}(${RULES[x]?.role})`).join(', ');
-      const planRaw = await api(dcMgr,'You are GoAi DeepCoder Manager. Output ONLY valid JSON.',[{role:'user',content:`Coding task: "${S(p).slice(0,250)}"\n\n${propText}\n\nAssign each worker a SPECIFIC module.\nOutput ONLY: {"plan":"architecture","assignments":[{"prov":"or_minimax","subtask":"Implement [specific module]..."}]}`}],2200,hfKey);
+      const propText = proposals.length ? 'Proposals:\n'+proposals.map(x=>`${x.pid}(${x.role}): "${x.text}"`).join('\n') : 'Workers: '+useWorkers.map(x=>`${x}(${provs[x]?.role})`).join(', ');
+      const planRaw = await api(dcMgr,'You are GoAi DeepCoder Manager. Output ONLY valid JSON.',[{role:'user',content:`Coding task: "${S(p).slice(0,250)}"\n\n${propText}\n\nAssign each worker a SPECIFIC module.\nOutput ONLY: {"plan":"architecture","assignments":[{"prov":"or_minimax","subtask":"Implement [specific module]..."}]}`}],2200);
       const m = (planRaw||'').match(/\{[\s\S]*?"assignments"[\s\S]*?\}/);
-      if (m) { const parsed=JSON.parse(m[0]); if(Array.isArray(parsed.assignments)&&parsed.assignments.length){ const va=parsed.assignments.filter(a=>a.prov&&avail.includes(a.prov)&&a.subtask&&a.prov!==dcMgr); if(va.length){ assignments=va; addMsg('mgr','📋 DeepCoder Architecture: '+S(parsed.plan)+'\n\n'+assignments.map(a=>`${RULES[a.prov]?.e||'·'} ${RULES[a.prov]?.modelName||a.prov}:\n  ${S(a.subtask).slice(0,80)}`).join('\n')); }}}
+      if (m) { const parsed=JSON.parse(m[0]); if(Array.isArray(parsed.assignments)&&parsed.assignments.length){ const va=parsed.assignments.filter(a=>a.prov&&avail.includes(a.prov)&&a.subtask&&a.prov!==dcMgr); if(va.length){ assignments=va; addMsg('mgr','📋 DeepCoder Architecture: '+S(parsed.plan)+'\n\n'+assignments.map(a=>`${provs[a.prov]?.emoji||'·'} ${provs[a.prov]?.label||a.prov}:\n  ${S(a.subtask).slice(0,80)}`).join('\n')); }}}
     } catch(e) { console.warn('DC plan:',e.message); }
     setTyping('');
     setTyping(`⚙️ ${assignments.length} coding AIs writing in parallel…`);
-    const settled = await Promise.allSettled(assignments.map(async a => { const ans=await api(a.prov,buildDCSys(a.prov,memSnap),[...hist,{role:'user',content:S(a.subtask||p)}],undefined,hfKey); return {prov:a.prov,label:S(RULES[a.prov]?.modelName||a.prov)+' ('+S(RULES[a.prov]?.role||'AI')+')',sub:S(a.subtask||p),text:S(ans||''),score:7}; }));
+    const settled = await Promise.allSettled(assignments.map(async a => { const ans=await api(a.prov,buildDCSys(provs[a.prov],memSnap),[...hist,{role:'user',content:S(a.subtask||p)}],undefined); return {prov:a.prov,label:S(provs[a.prov]?.label||a.prov)+' ('+S(provs[a.prov]?.role||'AI')+')',sub:S(a.subtask||p),text:S(ans||''),score:7}; }));
     setTyping('');
     const responses=[];
     for (const r of settled) { if(r.status==='fulfilled'&&r.value){ const v=r.value,chk=checkOk(v.text); v.ok=chk.ok; v.issue=chk.issue; responses.push(v); addLog(v.label+(chk.ok?'':' ⚠️ '+chk.issue),chk.ok,v.text); } else addMsg('warn','❌ Coder: '+S(r.reason?.message||'failed').slice(0,150)); }
@@ -1000,15 +840,15 @@ export default function App() {
   async function runManaged(p, hist, memSnap, isDebate) {
     const workers = avail.filter(x=>x!==MGR_ID);
     if (!workers.length) { addMsg('warn','No workers. Check API keys.'); ss('No workers','bad'); return; }
-    addMsg('meta',(isDebate?'💬 Debate':'🎯 Managed')+' · Manager: '+S(RULES[MGR_ID]?.modelName||MGR_ID)+' · '+workers.length+' workers');
+    addMsg('meta',(isDebate?'💬 Debate':'🎯 Managed')+' · Manager: '+S(provs[MGR_ID]?.label||MGR_ID)+' · '+workers.length+' workers');
     setTyping('💬 AIs discussing…'); let proposals=[]; try{proposals=await commsRound(p,workers);}catch{} setTyping(''); if(proposals.length) addComm(proposals);
     setTyping('📋 Planning…'); let plan={plan:'Parallel',assignments:[]}; try{plan=await mgrPlan(p,workers,proposals);}catch{}
     const rawA = Array.isArray(plan?.assignments)?plan.assignments:[];
     const va = rawA.filter(a=>a&&a.prov&&a.prov!==MGR_ID&&avail.includes(a.prov)&&a.subtask);
-    const fa = va.length ? va : workers.slice(0,5).map(w=>({prov:w,subtask:p+'\n\nYou are '+S(RULES[w]?.modelName||w)+'. Give a complete, helpful answer.'}));
-    addMsg('mgr','📋 Plan: '+S(plan?.plan)+'\n\n'+fa.map(a=>`${RULES[a.prov]?.e||'·'} ${RULES[a.prov]?.modelName||a.prov}:\n  ${S(a.subtask).slice(0,80)}`).join('\n')); setTyping('');
+    const fa = va.length ? va : workers.slice(0,5).map(w=>({prov:w,subtask:p+'\n\nYou are '+S(provs[w]?.label||w)+'. Give a complete, helpful answer.'}));
+    addMsg('mgr','📋 Plan: '+S(plan?.plan)+'\n\n'+fa.map(a=>`${provs[a.prov]?.emoji||'·'} ${provs[a.prov]?.label||a.prov}:\n  ${S(a.subtask).slice(0,80)}`).join('\n')); setTyping('');
     setTyping(`⚙️ ${fa.length} workers responding…`);
-    const settled = await Promise.allSettled(fa.map(async a => { const ans=await api(a.prov,buildSys(a.prov,a.subtask,memSnap),[...hist,{role:'user',content:S(a.subtask||p)}],undefined,hfKey); return {prov:a.prov,label:S(RULES[a.prov]?.modelName||a.prov)+' ('+S(RULES[a.prov]?.role||'AI')+')',sub:S(a.subtask||p),text:S(ans||''),score:7}; }));
+    const settled = await Promise.allSettled(fa.map(async a => { const ans=await api(a.prov,buildSys(provs[a.prov],a.subtask,memSnap),[...hist,{role:'user',content:S(a.subtask||p)}],undefined); return {prov:a.prov,label:S(provs[a.prov]?.label||a.prov)+' ('+S(provs[a.prov]?.role||'AI')+')',sub:S(a.subtask||p),text:S(ans||''),score:7}; }));
     setTyping(''); const responses=[];
     for (const r of settled) { if(r.status==='fulfilled'&&r.value){ const v=r.value,chk=checkOk(v.text); v.ok=chk.ok; v.issue=chk.issue; responses.push(v); addLog(v.label,chk.ok,v.text); } else addMsg('warn','❌ Worker: '+S(r.reason?.message||'failed').slice(0,160)); }
     if (!responses.length) { addMsg('warn','🚫 All failed.'); ss('Failed','bad'); return; }
@@ -1020,7 +860,7 @@ export default function App() {
       for (const rv of rd.reviews) {
         if(fc>=2) break; if(rv.complete||typeof rv.idx!=='number'||rv.idx>=responses.length) continue;
         const resp=responses[rv.idx]; if(!resp||!avail.includes(resp.prov)) continue;
-        try { setTyping('🔄 Fixing '+S(RULES[resp.prov]?.modelName||resp.prov)+'…'); const fix=await api(resp.prov,buildSys(resp.prov,resp.sub,memSnap)+'\nFix issue: "'+S(rv.issue||'incomplete')+'".',[...hist,{role:'user',content:'Fix issue "'+S(rv.issue)+'" in your response.'}],undefined,hfKey); responses[rv.idx].text+='\n[FIXED]\n'+S(fix); addMsg('mgr','🔄 '+S(RULES[resp.prov]?.modelName||resp.prov)+' fixed'); fc++; setTyping(''); }
+        try { setTyping('🔄 Fixing '+S(provs[resp.prov]?.label||resp.prov)+'…'); const fix=await api(resp.prov,buildSys(provs[resp.prov],resp.sub,memSnap)+'\nFix issue: "'+S(rv.issue||'incomplete')+'".',[...hist,{role:'user',content:'Fix issue "'+S(rv.issue)+'" in your response.'}],undefined); responses[rv.idx].text+='\n[FIXED]\n'+S(fix); addMsg('mgr','🔄 '+S(provs[resp.prov]?.label||resp.prov)+' fixed'); fc++; setTyping(''); }
         catch(e2) { addMsg('warn','❌ Fix: '+S(e2.message)); setTyping(''); }
       }
     }
@@ -1028,14 +868,13 @@ export default function App() {
       addMsg('disc','💬 Debate — AIs reviewing each other');
       for (let i=0;i<Math.min(responses.length,3);i++) {
         const rv=responses[(i+1)%responses.length],sb=responses[i]; if(!rv||!sb||!avail.includes(rv.prov)) continue;
-        try { setTyping('💬 '+S(RULES[rv.prov]?.modelName||rv.prov)+' → '+S(RULES[sb.prov]?.modelName||sb.prov)+'…'); const disc=await api(rv.prov,buildSys(rv.prov,'',memSnap)+' Structured peer review.',[...hist,{role:'user',content:'Review this response to "'+S(p).slice(0,130)+'":\n\n'+S(sb.text).slice(0,380)+'\n\n1. What\'s good\n2. What\'s wrong\n3. Your complete improved answer'}],undefined,hfKey); addMsg('disc','💬 '+S(RULES[rv.prov]?.modelName)+' reviews '+S(RULES[sb.prov]?.modelName)+':\n\n'+S(disc)); setTyping(''); }
+        try { setTyping('💬 '+S(provs[rv.prov]?.label||rv.prov)+' → '+S(provs[sb.prov]?.label||sb.prov)+'…'); const disc=await api(rv.prov,buildSys(provs[rv.prov],'',memSnap)+' Structured peer review.',[...hist,{role:'user',content:'Review this response to "'+S(p).slice(0,130)+'":\n\n'+S(sb.text).slice(0,380)+'\n\n1. What\'s good\n2. What\'s wrong\n3. Your complete improved answer'}],undefined); addMsg('disc','💬 '+S(provs[rv.prov]?.label)+' reviews '+S(provs[sb.prov]?.label)+':\n\n'+S(disc)); setTyping(''); }
         catch(e3) { addMsg('warn','❌ Debate: '+S(e3.message)); setTyping(''); }
       }
     }
     await mgrAssemble(p,responses,rd,hist,memSnap,MGR_ID,false);
   }
 
-  /* ─── SEND ── */
   const send = async () => {
     const p = inp.trim(); if (!p||busy) return;
     if (!activeId) { await createChatFn(); setTimeout(()=>{ inpRef.current?.focus(); },100); return; }
@@ -1050,28 +889,28 @@ export default function App() {
         await runManaged(p,hist,memSnap,activeMode==='debate');
       } else {
         const order = [activePref,...avail.filter(x=>x!==activePref)];
-        addMsg('meta',(activeMode==='smart'?'🧠 Smart':'⚡ Fast')+' · '+S(RULES[activePref]?.modelName||activePref)+' · streaming');
+        addMsg('meta',(activeMode==='smart'?'🧠 Smart':'⚡ Fast')+' · '+S(provs[activePref]?.label||activePref)+' · streaming');
         for (const pid of order) {
           if (!avail.includes(pid)) continue;
           const t0 = performance.now(); let accumulated=''; let firstChunk=true;
           try {
-            setTyping((RULES[pid]?.e||'⟳')+' '+S(RULES[pid]?.modelName||pid)+'…');
-            await streamApi(pid,buildSys(pid,'',memSnap),[...hist,{role:'user',content:p}],RULES[pid]?.tok||2000,chunk=>{
+            setTyping((provs[pid]?.emoji||'⟳')+' '+S(provs[pid]?.label||pid)+'…');
+            await streamApi(pid,buildSys(provs[pid],'',memSnap),[...hist,{role:'user',content:p}],provs[pid]?.maxTok||2000,chunk=>{
               if(firstChunk){setTyping('');firstChunk=false;}
-              accumulated+=chunk; setStreamBuf(accumulated); setStreamPid(pid);
-            }, hfKey);
-            setStreamBuf(''); setStreamPid('');
+              accumulated+=chunk; setStreamBuf(accumulated); setStreamProv(provs[pid]);
+            });
+            setStreamBuf(''); setStreamProv(null);
             if (accumulated) {
-              addMsg('ai',S(RULES[pid]?.e||'·')+' '+S(RULES[pid]?.modelName||pid)+' ('+S(RULES[pid]?.role||'AI')+')\n\n'+accumulated);
-              ss('✓ '+S(RULES[pid]?.modelName||pid)+' · '+Math.round(performance.now()-t0)+'ms','good');
+              addMsg('ai',S(provs[pid]?.emoji||'·')+' '+S(provs[pid]?.label||pid)+' ('+S(provs[pid]?.role||'AI')+')\n\n'+accumulated);
+              ss('✓ '+S(provs[pid]?.label||pid)+' · '+Math.round(performance.now()-t0)+'ms','good');
               return;
             }
             throw new Error('Empty stream');
           } catch(e) {
-            setStreamBuf(''); setStreamPid(''); setTyping('');
-            if (accumulated) { addMsg('ai',S(RULES[pid]?.e||'·')+' '+S(RULES[pid]?.modelName||pid)+'\n\n'+accumulated+'\n\n[⚠️ Stream interrupted]'); ss('Partial response','warn'); return; }
+            setStreamBuf(''); setStreamProv(null); setTyping('');
+            if (accumulated) { addMsg('ai',S(provs[pid]?.emoji||'·')+' '+S(provs[pid]?.label||pid)+'\n\n'+accumulated+'\n\n[⚠️ Stream interrupted]'); ss('Partial response','warn'); return; }
             const em = S(e.message||'error');
-            if (/quota|rate|429|limit/i.test(em)) addMsg('warn','⚠️ '+S(RULES[pid]?.modelName||pid)+': rate limited');
+            if (/quota|rate|429|limit/i.test(em)) addMsg('warn','⚠️ '+S(provs[pid]?.label||pid)+': rate limited');
             else addMsg('warn','❌ '+pid+': '+em);
             if (activeMode==='fast') break;
           }
@@ -1080,10 +919,9 @@ export default function App() {
         ss('Done','good');
       }
     } catch(e) { addMsg('warn','🚨 '+S(e?.message||'Unexpected error')); ss('Error','bad'); }
-    finally { setBusy(false); setTyping(''); setStreamBuf(''); setStreamPid(''); }
+    finally { setBusy(false); setTyping(''); setStreamBuf(''); setStreamProv(null); }
   };
 
-  /* ─── UI CONSTANTS ── */
   const MODES = [
     { k:'fast',      l:'⚡ Fast' },
     { k:'smart',     l:'🧠 Smart' },
@@ -1103,184 +941,135 @@ export default function App() {
   const activeTitle = chats.find(c=>c.id===activeId)?.title||'GoAi';
   const isLight = theme==='light';
   const charCount = inp.length;
-  const charLimit = RULES[activePref]?.tok ? Math.floor(RULES[activePref].tok * 3) : 6000;
-
-  return (
-    <ToastProvider>
-      <_AppInner
-        chats={chats} activeId={activeId} activeMsgs={activeMsgs}
-        activeMode={activeMode} activePref={activePref} sideOpen={sideOpen}
-        aboutOpen={aboutOpen} mem={mem} memOpen={memOpen}
-        pickerOpen={pickerOpen} hfModalOpen={hfModalOpen} pv={pv}
-        busy={busy} typing={typing} streamBuf={streamBuf} streamPid={streamPid}
-        stat={stat} provs={provs} inp={inp} theme={theme} hfKey={hfKey}
-        searchOpen={searchOpen} searchQ={searchQ} dc={dc} isDC={isDC}
-        activeTitle={activeTitle} isLight={isLight} charCount={charCount} charLimit={charLimit}
-        MODES={MODES} SUGGESTIONS={SUGGESTIONS} dcManagers={dcManagers} dcWorkers={dcWorkers}
-        provAvail={provAvail} avail={avail}
-        chatRef={chatRef} inpRef={inpRef} msgRefs={msgRefs}
-        setChats={setChats} setActiveId={setActiveId} setActiveMsgs={setActiveMsgs}
-        setActiveMode={setActiveMode} setActivePref={setActivePref} setSideOpen={setSideOpen}
-        setAboutOpen={setAboutOpen} setMem={setMem} setMemOpen={setMemOpen}
-        setPickerOpen={setPickerOpen} setHfModalOpen={setHfModalOpen} setPv={setPv}
-        setBusy={setBusy} setTyping={setTyping} setStreamBuf={setStreamBuf} setStreamPid={setStreamPid}
-        setStat={setStat} setProvs={setProvs} setInp={setInp} setTheme={setTheme}
-        setSearchOpen={setSearchOpen}
-        createChatFn={createChatFn} selectChat={selectChat} deleteChat={deleteChat}
-        renameChat={renameChat} setMode={setMode} setPref={setPref} addMsg={addMsg}
-        clearChat={clearChat} send={send} jumpToMsg={jumpToMsg}
-        handleSaveHFKey={handleSaveHFKey}
-        exportMD={()=>{ exportAsMarkdown(activeMsgs,activeTitle); toast('Exported as Markdown ✨','success'); }}
-        exportJSON={()=>{ exportAsJSON(activeMsgs,activeTitle); toast('Exported as JSON','success'); }}
-      />
-    </ToastProvider>
-  );
-}
-
-/* ─── INNER APP (needs toast context) ───────────────────────────────────── */
-function _AppInner(props) {
-  const { chats,activeId,activeMsgs,activeMode,activePref,sideOpen,aboutOpen,mem,memOpen,pickerOpen,hfModalOpen,pv,busy,typing,streamBuf,streamPid,stat,provs,inp,theme,hfKey,searchOpen,searchQ,dc,isDC,activeTitle,isLight,charCount,charLimit,MODES,SUGGESTIONS,dcManagers,dcWorkers,provAvail,avail,chatRef,inpRef,msgRefs,setSideOpen,setAboutOpen,setMemOpen,setPickerOpen,setHfModalOpen,setPv,setInp,setSearchOpen,setTheme,createChatFn,selectChat,deleteChat,renameChat,setMode,setPref,clearChat,send,jumpToMsg,handleSaveHFKey,exportMD,exportJSON } = props;
-
+  const curProv = provs[activePref] || {};
+  const charLimit = curProv.maxTok ? Math.floor(curProv.maxTok * 3) : 6000;
   const [showExportMenu, setShowExportMenu] = useState(false);
 
   return (
-    <div className="layout">
-      {/* Background FX */}
-      <div className="bg-fx" aria-hidden>
-        <div className="blob b1"/><div className="blob b2"/><div className="blob b3"/>
-        <div className="blob b4"/><div className="blob b5"/>
-      </div>
+    <ToastProvider>
+      <div className="layout">
+        <div className="bg-fx" aria-hidden>
+          <div className="blob b1"/><div className="blob b2"/><div className="blob b3"/>
+          <div className="blob b4"/><div className="blob b5"/>
+        </div>
 
-      <Sidebar
-        chats={chats} activeId={activeId} onNew={createChatFn}
-        onSelect={selectChat} onDelete={deleteChat} onRename={renameChat}
-        onAbout={()=>setAboutOpen(true)} open={sideOpen} provAvail={provAvail}
-        theme={theme} onThemeToggle={()=>setTheme(t=>t==='dark'?'light':'dark')}
-      />
+        <Sidebar
+          chats={chats} activeId={activeId} onNew={createChatFn}
+          onSelect={selectChat} onDelete={deleteChat} onRename={renameChat}
+          onAbout={()=>setAboutOpen(true)} open={sideOpen} provAvail={provAvail}
+          theme={theme} onThemeToggle={()=>setTheme(t=>t==='dark'?'light':'dark')}
+        />
 
-      <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',height:'100%',overflow:'hidden',background:'transparent'}}>
-        {/* ── Topbar ── */}
-        <div style={{flexShrink:0,padding:'9px 13px',borderBottom:'1px solid var(--border)',background:isLight?'rgba(255,251,247,.96)':'rgba(7,10,24,.98)',backdropFilter:'blur(30px)',display:'flex',alignItems:'center',gap:9,zIndex:10,boxShadow:'0 2px 12px var(--shadow)'}}>
-          <button onClick={()=>setSideOpen(v=>!v)} style={{background:'var(--glass)',border:'1px solid var(--glass-border)',cursor:'pointer',color:'var(--primary-light)',fontSize:15,padding:'5px 8px',borderRadius:10,flexShrink:0,lineHeight:1,transition:'all .2s'}}>
-            {sideOpen?'◁':'☰'}
-          </button>
-          <div style={{width:1,height:18,background:'var(--border)',flexShrink:0,borderRadius:1}}/>
-          <div style={{minWidth:0,flex:1,overflow:'hidden'}}>
-            <div style={{fontSize:12,fontWeight:700,color:'var(--text-secondary)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{activeTitle}</div>
-          </div>
-          <div style={{display:'flex',gap:7,alignItems:'center',flexShrink:0}}>
-            <ModelPickerBtn pref={activePref} provs={provs} onClick={()=>setPickerOpen(true)}/>
-            {/* Search */}
-            <button onClick={()=>setSearchOpen(v=>!v)} title="Search (Ctrl+F)" style={{background:'var(--glass)',border:'1px solid var(--glass-border)',borderRadius:14,padding:'6px 10px',cursor:'pointer',color:'var(--text-secondary)',fontSize:13,fontFamily:'inherit',transition:'all .2s',display:'flex',alignItems:'center'}}>🔍</button>
-            {/* Memory */}
-            <button onClick={()=>setMemOpen(true)} style={{background:'var(--glass)',border:'1px solid var(--glass-border)',borderRadius:14,padding:'6px 11px',cursor:'pointer',color:'var(--primary-light)',fontSize:11,fontFamily:'inherit',transition:'all .2s',display:'flex',alignItems:'center',gap:4,fontWeight:600}}>
-              🧠<span>{mem.length}</span>
+        <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',height:'100%',overflow:'hidden',background:'transparent'}}>
+          <div style={{flexShrink:0,padding:'9px 13px',borderBottom:'1px solid var(--border)',background:isLight?'rgba(255,251,247,.96)':'rgba(7,10,24,.98)',backdropFilter:'blur(30px)',display:'flex',alignItems:'center',gap:9,zIndex:10,boxShadow:'0 2px 12px var(--shadow)'}}>
+            <button onClick={()=>setSideOpen(v=>!v)} style={{background:'var(--glass)',border:'1px solid var(--glass-border)',cursor:'pointer',color:'var(--primary-light)',fontSize:15,padding:'5px 8px',borderRadius:10,flexShrink:0,lineHeight:1,transition:'all .2s'}}>
+              {sideOpen?'◁':'☰'}
             </button>
-            {/* Export */}
-            <div style={{position:'relative'}}>
-              <button onClick={()=>setShowExportMenu(v=>!v)} title="Export chat" style={{background:'var(--glass)',border:'1px solid var(--glass-border)',borderRadius:14,padding:'6px 10px',cursor:'pointer',color:'var(--text-secondary)',fontSize:13,transition:'all .2s'}}>⬇️</button>
-              {showExportMenu&&(
-                <div onClick={()=>setShowExportMenu(false)} style={{position:'absolute',top:'110%',right:0,background:isLight?'rgba(255,251,247,.98)':'rgba(7,10,24,.99)',border:'1px solid var(--border)',borderRadius:14,padding:'6px',zIndex:100,minWidth:150,boxShadow:'0 8px 32px var(--shadow)'}}>
-                  <button onClick={exportMD} style={{display:'block',width:'100%',textAlign:'left',background:'none',border:'none',cursor:'pointer',color:'var(--text-primary)',fontFamily:'inherit',padding:'7px 12px',borderRadius:9,fontSize:12,transition:'all .2s'}}>📄 Export Markdown</button>
-                  <button onClick={exportJSON} style={{display:'block',width:'100%',textAlign:'left',background:'none',border:'none',cursor:'pointer',color:'var(--text-primary)',fontFamily:'inherit',padding:'7px 12px',borderRadius:9,fontSize:12,transition:'all .2s'}}>🗂 Export JSON</button>
+            <div style={{width:1,height:18,background:'var(--border)',flexShrink:0,borderRadius:1}}/>
+            <div style={{minWidth:0,flex:1,overflow:'hidden'}}>
+              <div style={{fontSize:12,fontWeight:700,color:'var(--text-secondary)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{activeTitle}</div>
+            </div>
+            <div style={{display:'flex',gap:7,alignItems:'center',flexShrink:0}}>
+              <ModelPickerBtn provs={provs} pref={activePref} onClick={()=>setPickerOpen(true)}/>
+              <button onClick={()=>setSearchOpen(v=>!v)} title="Search (Ctrl+F)" style={{background:'var(--glass)',border:'1px solid var(--glass-border)',borderRadius:14,padding:'6px 10px',cursor:'pointer',color:'var(--text-secondary)',fontSize:13,fontFamily:'inherit',transition:'all .2s',display:'flex',alignItems:'center'}}>🔍</button>
+              <button onClick={()=>setMemOpen(true)} style={{background:'var(--glass)',border:'1px solid var(--glass-border)',borderRadius:14,padding:'6px 11px',cursor:'pointer',color:'var(--primary-light)',fontSize:11,fontFamily:'inherit',transition:'all .2s',display:'flex',alignItems:'center',gap:4,fontWeight:600}}>
+                🧠<span>{mem.length}</span>
+              </button>
+              <div style={{position:'relative'}}>
+                <button onClick={()=>setShowExportMenu(v=>!v)} title="Export chat" style={{background:'var(--glass)',border:'1px solid var(--glass-border)',borderRadius:14,padding:'6px 10px',cursor:'pointer',color:'var(--text-secondary)',fontSize:13,transition:'all .2s'}}>⬇️</button>
+                {showExportMenu&&(
+                  <div onClick={()=>setShowExportMenu(false)} style={{position:'absolute',top:'110%',right:0,background:isLight?'rgba(255,251,247,.98)':'rgba(7,10,24,.99)',border:'1px solid var(--border)',borderRadius:14,padding:'6px',zIndex:100,minWidth:150,boxShadow:'0 8px 32px var(--shadow)'}}>
+                    <button onClick={()=>{ exportAsMarkdown(activeMsgs,activeTitle); toast('Exported as Markdown ✨','success'); }} style={{display:'block',width:'100%',textAlign:'left',background:'none',border:'none',cursor:'pointer',color:'var(--text-primary)',fontFamily:'inherit',padding:'7px 12px',borderRadius:9,fontSize:12,transition:'all .2s'}}>📄 Export Markdown</button>
+                    <button onClick={()=>{ exportAsJSON(activeMsgs,activeTitle); toast('Exported as JSON','success'); }} style={{display:'block',width:'100%',textAlign:'left',background:'none',border:'none',cursor:'pointer',color:'var(--text-primary)',fontFamily:'inherit',padding:'7px 12px',borderRadius:9,fontSize:12,transition:'all .2s'}}>🗂 Export JSON</button>
+                  </div>
+                )}
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:5,fontSize:11,color:dc,flexShrink:0,background:'var(--glass)',border:'1px solid var(--glass-border)',borderRadius:12,padding:'5px 10px',fontWeight:500,maxWidth:120}}>
+                <span style={{width:6,height:6,borderRadius:'50%',background:dc,display:'inline-block',animation:busy?'glow 1.2s ease-in-out infinite':'',flexShrink:0}}/>
+                <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:10}}>{stat.t}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{flexShrink:0,padding:'7px 11px',borderBottom:'1px solid var(--border)',background:isLight?'rgba(255,251,247,.94)':'rgba(7,10,24,.95)',display:'flex',gap:5,alignItems:'center',overflowX:'auto',WebkitOverflowScrolling:'touch'}}>
+            {MODES.map(m => {
+              const isAct=activeMode===m.k, isDCBtn=m.k==='deepcoder';
+              return <button key={m.k} className={`mbtn${isAct?(isDCBtn?' dc':' on'):''}`} onClick={()=>setMode(m.k)} style={{flex:'0 0 auto'}}>{m.l}</button>;
+            })}
+            {isDC&&dcManagers.length>0&&<span style={{fontSize:9,color:'#fdba74',background:'rgba(249,115,22,.1)',border:'1px solid rgba(249,115,22,.2)',borderRadius:10,padding:'3px 9px',flexShrink:0,whiteSpace:'nowrap',marginLeft:3,fontWeight:500}}>🧠 {provs[dcManagers[0]]?.label||dcManagers[0]} · {dcWorkers.length} workers</span>}
+          </div>
+
+          <div ref={chatRef} style={{flex:1,overflowY:'auto',padding:'14px 13px',display:'flex',flexDirection:'column',gap:10}}>
+            {activeMsgs.filter(m=>!m.isLog&&!m.isComm&&m.role).length===0&&activeMsgs.length===0&&(
+              <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',gap:16,textAlign:'center',padding:32}}>
+                <div style={{fontSize:60,lineHeight:1,animation:'pulse 4s ease-in-out infinite',filter:'drop-shadow(0 0 24px rgba(var(--primary-rgb),.4))'}}>⚡</div>
+                <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:'1.5rem',background:'linear-gradient(135deg,var(--primary),#8b5cf6,#06b6d4)',WebkitBackgroundClip:'text',backgroundClip:'text',color:'transparent',letterSpacing:'-.3px'}}>GoAi v7</div>
+                <div style={{fontSize:12,color:'var(--text-muted)',maxWidth:440,lineHeight:2.2}}>
+                  {provAvail} models · Multi-AI orchestration<br/>
+                  {isDC
+                    ? <span style={{color:'#fdba74',fontWeight:600}}>💻 Specialist coding agents ready</span>
+                    : <span>Ask me anything — coding, writing, math, or creative exploration</span>}
                 </div>
-              )}
-            </div>
-            {/* Status */}
-            <div style={{display:'flex',alignItems:'center',gap:5,fontSize:11,color:dc,flexShrink:0,background:'var(--glass)',border:'1px solid var(--glass-border)',borderRadius:12,padding:'5px 10px',fontWeight:500,maxWidth:120}}>
-              <span style={{width:6,height:6,borderRadius:'50%',background:dc,display:'inline-block',animation:busy?'glow 1.2s ease-in-out infinite':'',flexShrink:0}}/>
-              <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:10}}>{stat.t}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Mode bar ── */}
-        <div style={{flexShrink:0,padding:'7px 11px',borderBottom:'1px solid var(--border)',background:isLight?'rgba(255,251,247,.94)':'rgba(7,10,24,.95)',display:'flex',gap:5,alignItems:'center',overflowX:'auto',WebkitOverflowScrolling:'touch'}}>
-          {MODES.map(m => {
-            const isAct=activeMode===m.k, isDCBtn=m.k==='deepcoder';
-            return <button key={m.k} className={`mbtn${isAct?(isDCBtn?' dc':' on'):''}`} onClick={()=>setMode(m.k)} style={{flex:'0 0 auto'}}>{m.l}</button>;
-          })}
-          {hfKey&&<span style={{fontSize:9,color:'#ffb347',background:'rgba(255,149,0,.1)',border:'1px solid rgba(255,149,0,.2)',borderRadius:10,padding:'3px 9px',flexShrink:0,fontWeight:600,marginLeft:3}}>🤗 HF</span>}
-          {isDC&&dcManagers.length>0&&<span style={{fontSize:9,color:'#fdba74',background:'rgba(249,115,22,.1)',border:'1px solid rgba(249,115,22,.2)',borderRadius:10,padding:'3px 9px',flexShrink:0,whiteSpace:'nowrap',marginLeft:3,fontWeight:500}}>🧠 {RULES[dcManagers[0]]?.modelName||dcManagers[0]} · {dcWorkers.length} workers</span>}
-        </div>
-
-        {/* ── Chat area ── */}
-        <div ref={chatRef} style={{flex:1,overflowY:'auto',padding:'14px 13px',display:'flex',flexDirection:'column',gap:10}}>
-          {activeMsgs.filter(m=>!m.isLog&&!m.isComm&&m.role).length===0&&activeMsgs.length===0&&(
-            <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',gap:16,textAlign:'center',padding:32}}>
-              <div style={{fontSize:60,lineHeight:1,animation:'pulse 4s ease-in-out infinite',filter:'drop-shadow(0 0 24px rgba(var(--primary-rgb),.4))'}}>⚡</div>
-              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:'1.5rem',background:'linear-gradient(135deg,var(--primary),#8b5cf6,#06b6d4)',WebkitBackgroundClip:'text',backgroundClip:'text',color:'transparent',letterSpacing:'-.3px'}}>GoAi v6.4</div>
-              <div style={{fontSize:12,color:'var(--text-muted)',maxWidth:440,lineHeight:2.2}}>
-                {Object.keys(RULES).length} models · Multi-AI orchestration · {hfKey ? '🤗 HF connected' : <span onClick={()=>setHfModalOpen(true)} style={{color:'#ffb347',cursor:'pointer',textDecoration:'underline'}}>Add HuggingFace key</span>}<br/>
-                {isDC
-                  ? <span style={{color:'#fdba74',fontWeight:600}}>💻 Specialist coding agents ready</span>
-                  : <span>Ask me anything — coding, writing, math, or creative exploration</span>}
+                <div style={{display:'flex',gap:6,flexWrap:'wrap',justifyContent:'center',maxWidth:500,marginTop:4}}>
+                  {SUGGESTIONS.map(s=>(
+                    <button key={s} onClick={()=>{ setInp(s); inpRef.current?.focus(); }}
+                      style={{background:'var(--glass)',border:'1px solid var(--glass-border)',borderRadius:20,padding:'6px 14px',cursor:'pointer',color:'var(--primary-light)',fontSize:11,fontFamily:'inherit',transition:'all .22s',fontWeight:500}}
+                      onMouseEnter={e=>{e.target.style.background='rgba(var(--primary-rgb),.12)';e.target.style.transform='translateY(-2px)';}}
+                      onMouseLeave={e=>{e.target.style.background='var(--glass)';e.target.style.transform='translateY(0)';}}
+                    >{s}</button>
+                  ))}
+                </div>
+                <div style={{fontSize:9,color:'var(--text-muted)',marginTop:8,opacity:.6}}>
+                  ⌘K model · ⌘N new chat · ⌘F search · ⌘B sidebar
+                </div>
               </div>
-              <div style={{display:'flex',gap:6,flexWrap:'wrap',justifyContent:'center',maxWidth:500,marginTop:4}}>
-                {SUGGESTIONS.map(s=>(
-                  <button key={s} onClick={()=>{ props.setInp(s); inpRef.current?.focus(); }}
-                    style={{background:'var(--glass)',border:'1px solid var(--glass-border)',borderRadius:20,padding:'6px 14px',cursor:'pointer',color:'var(--primary-light)',fontSize:11,fontFamily:'inherit',transition:'all .22s',fontWeight:500}}
-                    onMouseEnter={e=>{e.target.style.background='rgba(var(--primary-rgb),.12)';e.target.style.transform='translateY(-2px)';}}
-                    onMouseLeave={e=>{e.target.style.background='var(--glass)';e.target.style.transform='translateY(0)';}}
-                  >{s}</button>
-                ))}
-              </div>
-              <div style={{fontSize:9,color:'var(--text-muted)',marginTop:8,opacity:.6}}>
-                ⌘K model · ⌘N new chat · ⌘F search · ⌘B sidebar
-              </div>
-            </div>
-          )}
-          {activeMsgs.map(msg => (
-            <Bubble
-              key={msg.id} msg={msg}
-              onPv={(code,lang)=>setPv({code,lang})}
-              searchQ={searchQ}
-              msgRef={el=>{ if(el) msgRefs.current[msg.id]=el; }}
-            />
-          ))}
-          {busy&&streamBuf&&<StreamBubble text={streamBuf} pid={streamPid}/>}
-          {busy&&typing&&!streamBuf&&<Typing text={typing}/>}
-        </div>
-
-        {/* ── Input bar ── */}
-        <div style={{flexShrink:0,padding:'11px 13px 13px',borderTop:'1px solid var(--border)',background:isLight?'rgba(255,251,247,.97)':'rgba(7,10,24,.99)',backdropFilter:'blur(30px)'}}>
-          <div style={{display:'flex',gap:8,alignItems:'flex-end'}}>
-            <div style={{flex:1,position:'relative'}}>
-              <textarea
-                ref={inpRef} value={inp}
-                onChange={e=>props.setInp(e.target.value)}
-                onKeyDown={e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();} }}
-                disabled={busy}
-                placeholder={isDC?'💻 Describe what to build… (DeepCoder)':'Ask anything… Enter = send · Shift+Enter = new line'}
-                style={{width:'100%',background:isLight?'rgba(255,251,247,.9)':'rgba(4,8,24,.92)',border:'1.5px solid '+(isDC?'rgba(249,115,22,.28)':'var(--glass-border)'),borderRadius:18,padding:'11px 40px 11px 15px',color:'var(--text-primary)',fontSize:13.5,resize:'none',minHeight:46,maxHeight:150,lineHeight:1.7,fontFamily:'inherit',outline:'none',transition:'all .2s',boxShadow:'0 2px 8px var(--shadow)'}}
-                rows={1}
+            )}
+            {activeMsgs.map(msg => (
+              <Bubble
+                key={msg.id} msg={msg}
+                onPv={(code,lang)=>setPv({code,lang})}
+                searchQ={searchQ}
+                msgRef={el=>{ if(el) msgRefs.current[msg.id]=el; }}
               />
-              {inp&&<span style={{position:'absolute',bottom:9,right:11,fontSize:9,color:charCount>charLimit*0.9?'var(--error)':'var(--text-muted)',pointerEvents:'none'}}>{charCount}</span>}
-            </div>
-            <button onClick={send} disabled={busy||!inp.trim()}
-              style={{background:busy||!inp.trim()?'var(--glass)':isDC?'linear-gradient(135deg,#f97316,#ef4444)':'linear-gradient(135deg,var(--primary),#8b5cf6)',border:'none',borderRadius:16,padding:'11px 20px',cursor:busy||!inp.trim()?'not-allowed':'pointer',color:busy||!inp.trim()?'var(--text-muted)':'#fff',fontWeight:800,fontSize:16,fontFamily:'inherit',flexShrink:0,boxShadow:!busy&&inp.trim()?(isDC?'0 6px 20px rgba(249,115,22,.3)':'0 6px 20px rgba(var(--primary-rgb),.32)'):'none',transition:'all .24s cubic-bezier(.4,0,.2,1)',display:'flex',alignItems:'center',justifyContent:'center'}}
-            >
-              {busy?<span style={{display:'inline-block',animation:'spin 0.7s linear infinite',fontSize:17}}>⟳</span>:'↑'}
-            </button>
+            ))}
+            {busy&&streamBuf&&<StreamBubble text={streamBuf} prov={streamProv}/>}
+            {busy&&typing&&!streamBuf&&<Typing text={typing}/>}
           </div>
-          <div style={{display:'flex',justifyContent:'space-between',marginTop:6,alignItems:'center',fontSize:9,color:'var(--text-muted)'}}>
-            <span>GoAi v6.4 · {provAvail} AIs · {activeMode} · {RULES[activePref]?.modelName||activePref}</span>
-            <div style={{display:'flex',gap:8,alignItems:'center'}}>
-              <button onClick={()=>setHfModalOpen(true)} style={{background:'none',border:'none',cursor:'pointer',color:hfKey?'#ffb347':'var(--text-muted)',fontSize:9,fontFamily:'inherit',padding:'1px 3px',borderRadius:5,transition:'all .2s'}}>🤗 {hfKey?'HF ✓':'Add HF'}</button>
+
+          <div style={{flexShrink:0,padding:'11px 13px 13px',borderTop:'1px solid var(--border)',background:isLight?'rgba(255,251,247,.97)':'rgba(7,10,24,.99)',backdropFilter:'blur(30px)'}}>
+            <div style={{display:'flex',gap:8,alignItems:'flex-end'}}>
+              <div style={{flex:1,position:'relative'}}>
+                <textarea
+                  ref={inpRef} value={inp}
+                  onChange={e=>setInp(e.target.value)}
+                  onKeyDown={e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();} }}
+                  disabled={busy}
+                  placeholder={isDC?'💻 Describe what to build… (DeepCoder)':'Ask anything… Enter = send · Shift+Enter = new line'}
+                  style={{width:'100%',background:isLight?'rgba(255,251,247,.9)':'rgba(4,8,24,.92)',border:'1.5px solid '+(isDC?'rgba(249,115,22,.28)':'var(--glass-border)'),borderRadius:18,padding:'11px 40px 11px 15px',color:'var(--text-primary)',fontSize:13.5,resize:'none',minHeight:46,maxHeight:150,lineHeight:1.7,fontFamily:'inherit',outline:'none',transition:'all .2s',boxShadow:'0 2px 8px var(--shadow)'}}
+                  rows={1}
+                />
+                {inp&&<span style={{position:'absolute',bottom:9,right:11,fontSize:9,color:charCount>charLimit*0.9?'var(--error)':'var(--text-muted)',pointerEvents:'none'}}>{charCount}</span>}
+              </div>
+              <button onClick={send} disabled={busy||!inp.trim()}
+                style={{background:busy||!inp.trim()?'var(--glass)':isDC?'linear-gradient(135deg,#f97316,#ef4444)':'linear-gradient(135deg,var(--primary),#8b5cf6)',border:'none',borderRadius:16,padding:'11px 20px',cursor:busy||!inp.trim()?'not-allowed':'pointer',color:busy||!inp.trim()?'var(--text-muted)':'#fff',fontWeight:800,fontSize:16,fontFamily:'inherit',flexShrink:0,boxShadow:!busy&&inp.trim()?(isDC?'0 6px 20px rgba(249,115,22,.3)':'0 6px 20px rgba(var(--primary-rgb),.32)'):'none',transition:'all .24s cubic-bezier(.4,0,.2,1)',display:'flex',alignItems:'center',justifyContent:'center'}}
+              >
+                {busy?<span style={{display:'inline-block',animation:'spin 0.7s linear infinite',fontSize:17}}>⟳</span>:'↑'}
+              </button>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',marginTop:6,alignItems:'center',fontSize:9,color:'var(--text-muted)'}}>
+              <span>GoAi v7 · {provAvail} AIs · {activeMode} · {curProv.label||activePref}</span>
               <button onClick={clearChat} style={{background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)',fontSize:9,fontFamily:'inherit',padding:'1px 4px',borderRadius:5,transition:'all .2s'}}
                 onMouseEnter={e=>e.target.style.color='var(--error)'} onMouseLeave={e=>e.target.style.color='var(--text-muted)'}>🗑 Clear</button>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* ── Modals / Drawers ── */}
-      <ModelSheet open={pickerOpen} onClose={()=>setPickerOpen(false)} provs={provs} pref={activePref} setPref={setPref} hfKey={hfKey} onSetHFKey={()=>{ setPickerOpen(false); setHfModalOpen(true); }}/>
-      <HFSettingsModal open={hfModalOpen} onClose={()=>setHfModalOpen(false)} hfKey={hfKey} onSave={handleSaveHFKey}/>
-      <MemDrawer mem={mem} open={memOpen} onClose={()=>setMemOpen(false)} onClear={()=>{ props.setMem([]); try{localStorage.removeItem('goai_mem');}catch{} }}/>
-      <SearchDrawer open={searchOpen} onClose={()=>setSearchOpen(false)} msgs={activeMsgs} onJump={jumpToMsg}/>
-      <PvModal pv={pv} onClose={()=>setPv(null)}/>
-      <AboutModal open={aboutOpen} onClose={()=>setAboutOpen(false)}/>
-    </div>
+        <ModelSheet open={pickerOpen} onClose={()=>setPickerOpen(false)} provs={provs} pref={activePref} setPref={setPref}/>
+        <MemDrawer mem={mem} open={memOpen} onClose={()=>setMemOpen(false)} onClear={()=>{ setMem([]); try{localStorage.removeItem('goai_mem');}catch{} }}/>
+        <SearchDrawer open={searchOpen} onClose={()=>setSearchOpen(false)} msgs={activeMsgs} onJump={jumpToMsg}/>
+        <PvModal pv={pv} onClose={()=>setPv(null)}/>
+        <AboutModal open={aboutOpen} onClose={()=>setAboutOpen(false)} provCount={provAvail}/>
+      </div>
+    </ToastProvider>
   );
 }
