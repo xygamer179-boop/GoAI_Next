@@ -1,18 +1,28 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "GoAI",
+  title: "GoAi v7",
+  description: "Multi-AI Collaboration System",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
-      <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
-      </link>
+        {/* Theme init — runs before paint to avoid flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const t = localStorage.getItem('goai_theme');
+                if (t === 'light') document.documentElement.setAttribute('data-theme','light');
+              } catch(e) {}
+            `,
+          }}
+        />
       </head>
       <body>
-        <div id="root">{children}</div> {/* 🔥 IMPORTANT */}
+        <div id="root">{children}</div>
       </body>
     </html>
   );
